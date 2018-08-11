@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 
-def stiching(img1, img2, M):
+def stitching(img1, img2, M):
 
     # Узнаём ширину и высоту изображений
     width1, high1 = img1.shape[:2]
@@ -37,22 +37,26 @@ def stiching(img1, img2, M):
 
 def homography(img1, img2):
     # Используем алгоритм SIFT
-    sift = cv2.xfeatures2d.SIFT_create()
+    orb = cv2.ORB_create()
 
     # Вычисляем ключевые точки и дескрипторы
-    keypoints1, descriptors1 = sift.detectAndCompute(img1, None)
-    keypoints2, descriptors2 = sift.detectAndCompute(img2, None)
+    keypoints1, descriptors1 = orb.detectAndCompute(img1, None)
+    keypoints2, descriptors2 = orb.detectAndCompute(img2, None)
 
     # Выбираем совпадающие
-    bf = cv2.BFMatcher()
-    matches = bf.knnMatch(descriptors1, descriptors2, k=2)
+    FLANN_INDEX_LSH = 6
+
+    index_params = dict(algorithm=FLANN_INDEX_LSH, table_number=6, key_size=12, multi_probe_level=1)
+    search_params = dict(checks=100)
+    flann = cv2.FlannBasedMatcher(index_params, search_params)
+    matches = flann.knnMatch(descriptors1, descriptors2, k=2)
 
     proper_matches = []
-    for m1, m2 in matches:
-        if m1.distance < 0.8 * m2.distance:
+    for i, (m1, m2) in enumerate(matches):
+        if m1.distance < 0.775 * m2.distance:
             proper_matches.append(m1)
 
-    min_matches = 8
+    min_matches = 4
     if len(proper_matches) > min_matches:
 
         img1_pts = []
@@ -74,5 +78,5 @@ def homography(img1, img2):
 def stitcher(img1, img2):
 
     M = homography(img1, img2)
-    result_image = stiching(img2, img1, M)
+    result_image = stitching(img2, img1, M)
     return result_image
