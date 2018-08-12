@@ -37,7 +37,7 @@ def stitching(img1, img2, M):
 
 def homography(img1, img2):
     # Используем алгоритм SIFT
-    orb = cv2.ORB_create()
+    orb = cv2.ORB_create(nfeatures=10000)
 
     # Вычисляем ключевые точки и дескрипторы
     keypoints1, descriptors1 = orb.detectAndCompute(img1, None)
